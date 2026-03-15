@@ -2,29 +2,66 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var storageService: StorageService
-    @State private var selectedTab = 0
+    @EnvironmentObject var auth: AuthService
+    @State private var selectedTab  = 0
+    @State private var showAccount  = false
+    @State private var showAdmin    = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
             ListsView()
-                .tabItem {
-                    Label("Lists", systemImage: "list.bullet")
-                }
+                .tabItem { Label("Lists",    systemImage: "list.bullet") }
                 .tag(0)
 
             DiscoverView()
-                .tabItem {
-                    Label("Discover", systemImage: "sparkles")
-                }
+                .tabItem { Label("Discover", systemImage: "sparkles") }
                 .tag(1)
+
+            AccountTab(showAdmin: $showAdmin)
+                .tabItem { Label("Account",  systemImage: "person.circle") }
+                .tag(2)
         }
         .tint(Color(hex: "#34c759"))
         .onAppear {
-            // Use system translucent tab bar — matches iOS design language
             let appearance = UITabBarAppearance()
             appearance.configureWithDefaultBackground()
-            UITabBar.appearance().standardAppearance = appearance
-            UITabBar.appearance().scrollEdgeAppearance = appearance
+            UITabBar.appearance().standardAppearance    = appearance
+            UITabBar.appearance().scrollEdgeAppearance  = appearance
+        }
+        .sheet(isPresented: $showAdmin) {
+            AdminView()
+        }
+    }
+}
+
+// MARK: - Account Tab
+
+struct AccountTab: View {
+    @EnvironmentObject var auth: AuthService
+    @Binding var showAdmin: Bool
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Profile") {
+                    LabeledContent("Email", value: auth.profile?.email ?? "—")
+                    LabeledContent("Role",  value: auth.profile?.role  ?? "—")
+                }
+                Section("Limits") {
+                    LabeledContent("Max Lists", value: "\(auth.profile?.maxLists ?? 4)")
+                    LabeledContent("Max Items", value: "\(auth.profile?.maxItems ?? 50)")
+                }
+                if auth.profile?.isAdmin == true {
+                    Section {
+                        Button("Open Admin Panel") { showAdmin = true }
+                            .foregroundColor(Color(hex: "#34c759"))
+                    }
+                }
+                Section {
+                    Button("Sign Out", role: .destructive) { auth.signOut() }
+                }
+            }
+            .navigationTitle("Account")
         }
     }
 }

@@ -29,4 +29,21 @@ struct GroceryItem: Identifiable, Codable {
         self.categoryId = categoryId
         self.additives = []
     }
+
+    /// Used by CloudStorageService to reconstruct items with their cloud UUID.
+    init(id: UUID, name: String, brand: String? = nil, imageURL: String? = nil,
+         nutriscoreGrade: String? = nil, novaGroup: Int? = nil, gistScore: Int? = nil,
+         quantity: Int = 1, isChecked: Bool = false, categoryId: UUID) {
+        self.id = id
+        self.name = name
+        self.brand = brand
+        self.imageURL = imageURL
+        self.nutriscoreGrade = nutriscoreGrade
+        self.novaGroup = novaGroup
+        self.gistScore = gistScore
+        self.quantity = quantity
+        self.isChecked = isChecked
+        self.categoryId = categoryId
+        self.additives = []
+    }
 }

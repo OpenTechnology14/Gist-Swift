@@ -26,6 +26,12 @@
 		A1000017 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B1000017 /* Assets.xcassets */; };
 		A1000019 /* GroceryList.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000019 /* GroceryList.swift */; };
 		A1000020 /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000020 /* ListsView.swift */; };
+		A1000021 /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000021 /* SupabaseConfig.swift */; };
+		A1000022 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000022 /* KeychainHelper.swift */; };
+		A1000023 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000023 /* AuthService.swift */; };
+		A1000024 /* CloudStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000024 /* CloudStorageService.swift */; };
+		A1000025 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000025 /* AuthView.swift */; };
+		A1000026 /* AdminView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000026 /* AdminView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +56,12 @@
 		B1000018 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B1000019 /* GroceryList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroceryList.swift; sourceTree = "<group>"; };
 		B1000020 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
+		B1000021 /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
+		B1000022 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		B1000023 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		B1000024 /* CloudStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudStorageService.swift; sourceTree = "<group>"; };
+		B1000025 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		B1000026 /* AdminView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +114,10 @@
 				B1000006 /* OpenFoodFactsService.swift */,
 				B1000007 /* StorageService.swift */,
 				B1000008 /* ScoringService.swift */,
+				B1000021 /* SupabaseConfig.swift */,
+				B1000022 /* KeychainHelper.swift */,
+				B1000023 /* AuthService.swift */,
+				B1000024 /* CloudStorageService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -118,6 +134,8 @@
 				B1000015 /* HealthBadgeView.swift */,
 				B1000016 /* GistScoreView.swift */,
 				B1000020 /* ListsView.swift */,
+				B1000025 /* AuthView.swift */,
+				B1000026 /* AdminView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -217,6 +235,12 @@
 				A1000016 /* GistScoreView.swift in Sources */,
 				A1000019 /* GroceryList.swift in Sources */,
 				A1000020 /* ListsView.swift in Sources */,
+				A1000021 /* SupabaseConfig.swift in Sources */,
+				A1000022 /* KeychainHelper.swift in Sources */,
+				A1000023 /* AuthService.swift in Sources */,
+				A1000024 /* CloudStorageService.swift in Sources */,
+				A1000025 /* AuthView.swift in Sources */,
+				A1000026 /* AdminView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

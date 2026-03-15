@@ -93,6 +93,23 @@ class OpenFoodFactsService: ObservableObject {
         } catch { return [] }
     }
 
+    // MARK: - Pre-caching
+
+    /// Fires background fetches for all discover categories so the Discover tab
+    /// loads from NSCache / URLCache instead of waiting on the network.
+    func warmDiscoverCache() {
+        let groceryCats = ["fruits", "vegetables", "dairy", "meat", "fish", "bread", "beverages", "snacks"]
+        let orderCats   = ["cookies", "chips", "baking", "sauces", "canned", "seasonings", "pasta", "cereals"]
+        Task.detached(priority: .background) { [weak self] in
+            guard let self else { return }
+            await withTaskGroup(of: Void.self) { group in
+                for cat in groceryCats + orderCats {
+                    group.addTask { _ = await self.discoverProductsAsync(category: cat) }
+                }
+            }
+        }
+    }
+
     // MARK: - URL builders
 
     private func searchURL(for query: String) -> URL? {

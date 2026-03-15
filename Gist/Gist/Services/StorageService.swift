@@ -2,6 +2,29 @@ import Foundation
 import Combine
 
 class StorageService: ObservableObject {
+    // MARK: - Limit helpers
+
+    var maxLists: Int { AuthService.shared.profile?.maxLists ?? 4 }
+    var maxItems: Int { AuthService.shared.profile?.maxItems ?? 50 }
+
+    var canAddList:  Bool { groceryLists.count < maxLists }
+    var canAddItem:  Bool { recentlyViewed.count < maxItems }
+
+    // MARK: - Cloud sync
+
+    /// Pull cloud data on sign-in and replace local state.
+    @MainActor
+    func pullFromCloud() async {
+        guard AuthService.shared.isSignedIn else { return }
+        let (lists, recent) = await CloudStorageService.shared.pullAll()
+        if !lists.isEmpty  { groceryLists    = lists;  save(groceryLists,    key: groceryListsKey) }
+        if !recent.isEmpty { recentlyViewed  = recent; save(recentlyViewed,  key: recentlyViewedKey) }
+    }
+
+    private func cloudSync(_ block: @escaping () async -> Void) {
+        guard AuthService.shared.isSignedIn else { return }
+        Task { await block() }
+    }
     @Published var groceryItems: [GroceryItem] = []
     @Published var orderItems: [GroceryItem] = []
     @Published var groceryCategories: [GroceryCategory] = GroceryCategory.defaults
@@ -50,15 +73,19 @@ class StorageService: ObservableObject {
     // MARK: - Grocery Lists
 
     func addGroceryList(name: String, emoji: String) {
+        guard canAddList else { return }
         let list = GroceryList(name: name, emoji: emoji, sortOrder: groceryLists.count)
         groceryLists.append(list)
         save(groceryLists, key: groceryListsKey)
+        cloudSync { await CloudStorageService.shared.upsertList(id: list.id, name: name, emoji: emoji, sortOrder: list.sortOrder) }
     }
 
     func removeGroceryList(at offsets: IndexSet) {
+        let removed = offsets.map { groceryLists[$0] }
         groceryLists.remove(atOffsets: offsets)
         for i in groceryLists.indices { groceryLists[i].sortOrder = i }
         save(groceryLists, key: groceryListsKey)
+        cloudSync { for list in removed { await CloudStorageService.shared.deleteList(id: list.id) } }
     }
 
     func reorderGroceryLists(from source: IndexSet, to destination: Int) {
@@ -69,14 +96,17 @@ class StorageService: ObservableObject {
 
     func addItemToList(_ item: GroceryItem, listId: UUID) {
         guard let idx = groceryLists.firstIndex(where: { $0.id == listId }) else { return }
+        guard groceryLists[idx].items.count < maxItems else { return }
         groceryLists[idx].items.append(item)
         save(groceryLists, key: groceryListsKey)
+        cloudSync { await CloudStorageService.shared.upsertItem(item, listId: listId, itemType: "list_item") }
     }
 
     func removeItemFromList(item: GroceryItem, listId: UUID) {
         guard let idx = groceryLists.firstIndex(where: { $0.id == listId }) else { return }
         groceryLists[idx].items.removeAll { $0.id == item.id }
         save(groceryLists, key: groceryListsKey)
+        cloudSync { await CloudStorageService.shared.deleteItem(id: item.id) }
     }
 
     func toggleItemInList(item: GroceryItem, listId: UUID) {
@@ -100,8 +130,10 @@ class StorageService: ObservableObject {
         let item = GroceryItem(from: product, categoryId: defaultCategoryId)
         recentlyViewed.removeAll { $0.name.lowercased() == item.name.lowercased() }
         recentlyViewed.insert(item, at: 0)
-        if recentlyViewed.count > 30 { recentlyViewed = Array(recentlyViewed.prefix(30)) }
+        let limit = min(maxItems, 30)
+        if recentlyViewed.count > limit { recentlyViewed = Array(recentlyViewed.prefix(limit)) }
         save(recentlyViewed, key: recentlyViewedKey)
+        cloudSync { await CloudStorageService.shared.upsertItem(item, listId: nil, itemType: "recently_viewed") }
     }
 
     func moveToList(item: GroceryItem, listId: UUID) {
@@ -113,6 +145,7 @@ class StorageService: ObservableObject {
     func removeFromRecentlyViewed(_ item: GroceryItem) {
         recentlyViewed.removeAll { $0.id == item.id }
         save(recentlyViewed, key: recentlyViewedKey)
+        cloudSync { await CloudStorageService.shared.deleteItem(id: item.id) }
     }
 
     // MARK: - Legacy Grocery List
