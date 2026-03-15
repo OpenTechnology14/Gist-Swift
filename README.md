@@ -24,9 +24,15 @@ A native SwiftUI iPhone app that helps you make healthier grocery choices. Searc
 - **NOVA Group** — 1–4 food processing classification
 - **Additive Risk** — Count and severity of potentially harmful additives (E-numbers)
 
+### Account & Cloud Sync
+- **Sign In / Create Account** — shown on launch; email + password via Supabase
+- **Cloud Sync** — lists and recently viewed items synced to Supabase on every change
+- **Offline-first** — all data also cached in UserDefaults for use without a connection
+- **Admin Panel** — admin users can view all accounts and adjust per-user limits
+
 ### Storage
-- All list and recently viewed data stored locally via **UserDefaults**
-- Keys: `groceryLists`, `recentlyViewed`
+- **Local:** UserDefaults (`groceryLists`, `recentlyViewed`)
+- **Cloud:** Supabase — `profiles`, `lists`, `items` tables
 
 ## Tech Stack
 
@@ -34,6 +40,45 @@ A native SwiftUI iPhone app that helps you make healthier grocery choices. Searc
 - AVFoundation (barcode scanning)
 - Open Food Facts API (free, open product database)
 - iOS 17.0+, Xcode 15+
+
+---
+
+## Supabase Setup (Required for Auth + Cloud Sync)
+
+The app uses [Supabase](https://supabase.com) (free tier) for sign-in, cloud sync, and admin controls.
+
+### Step 1 — Create a Supabase project
+
+1. Go to [supabase.com](https://supabase.com) and create a free project
+2. In the dashboard go to **Settings → API** and copy:
+   - **Project URL** (e.g. `https://abcdefgh.supabase.co`)
+   - **anon / public key**
+
+### Step 2 — Run the schema
+
+1. In the Supabase dashboard go to **SQL Editor**
+2. Paste and run the contents of [`supabase_schema.sql`](supabase_schema.sql)
+
+This creates the `profiles`, `lists`, and `items` tables with Row Level Security enabled.
+
+### Step 3 — Add your credentials to the app
+
+Open `Gist/Gist/Services/SupabaseConfig.swift` and update the two constants:
+
+```swift
+static let url     = "https://YOUR_PROJECT_REF.supabase.co"  // ← your Project URL
+static let anonKey = "YOUR_ANON_KEY"                          // ← your anon/public key
+```
+
+### Step 4 — Promote yourself to admin
+
+After signing up in the app, run this once in the Supabase SQL Editor:
+
+```sql
+update public.profiles set role = 'admin' where email = 'your@email.com';
+```
+
+Your Account tab will then show an **Open Admin Panel** button where you can adjust per-user list and item limits.
 
 ---
 
@@ -128,9 +173,10 @@ VS Code supports iOS development via the **Swift extension** and **iOS Simulator
 
 ### Privacy notes for review
 
-The app uses the camera for barcode scanning. Make sure your App Store Connect privacy nutrition label reflects:
+The app uses the camera for barcode scanning and collects email/password for authentication. Make sure your App Store Connect privacy nutrition label reflects:
 - **Camera** — used for barcode scanning (not linked to identity)
-- No data collected or transmitted to your servers
+- **Email address** — collected for account creation and sign-in
+- **User content** (lists, items) — stored in your Supabase project, not shared with third parties
 
 ---
 
