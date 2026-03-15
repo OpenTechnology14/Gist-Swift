@@ -188,27 +188,25 @@ class OrderListViewModel: ObservableObject {
 
     init() {
         $searchQuery
-            .debounce(for: .milliseconds(400), scheduler: DispatchQueue.main)
+            .debounce(for: .milliseconds(250), scheduler: DispatchQueue.main)
             .removeDuplicates()
-            .sink { [weak self] query in
-                if query.isEmpty {
-                    self?.searchResults = []
-                } else {
-                    self?.search(query: query)
-                }
+            .handleEvents(receiveOutput: { [weak self] query in
+                if query.isEmpty { self?.searchResults = [] }
+                self?.isLoading = !query.isEmpty
+            })
+            .filter { !$0.isEmpty }
+            .map { [weak self] query -> AnyPublisher<[Product], Never> in
+                guard let self else { return Just([]).eraseToAnyPublisher() }
+                return self.service.searchProducts(query: query)
+                    .replaceError(with: [])
+                    .eraseToAnyPublisher()
             }
-            .store(in: &cancellables)
-    }
-
-    private func search(query: String) {
-        isLoading = true
-        service.searchProducts(query: query)
-            .sink(receiveCompletion: { [weak self] _ in
-                self?.isLoading = false
-            }, receiveValue: { [weak self] products in
+            .switchToLatest()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] products in
                 self?.searchResults = products
                 self?.isLoading = false
-            })
+            }
             .store(in: &cancellables)
     }
 

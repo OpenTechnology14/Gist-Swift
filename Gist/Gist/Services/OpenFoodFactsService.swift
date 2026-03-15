@@ -4,35 +4,59 @@ import Combine
 class OpenFoodFactsService: ObservableObject {
     static let shared = OpenFoodFactsService()
 
-    private var cancellables = Set<AnyCancellable>()
+    // Dedicated session: 50 MB memory / 200 MB disk cache, 10 s timeout
+    private let session: URLSession = {
+        let cache = URLCache(
+            memoryCapacity:  50 * 1024 * 1024,
+            diskCapacity:   200 * 1024 * 1024
+        )
+        let config = URLSessionConfiguration.default
+        config.urlCache = cache
+        config.requestCachePolicy = .returnCacheDataElseLoad
+        config.timeoutIntervalForRequest = 10
+        config.httpMaximumConnectionsPerHost = 6
+        return URLSession(configuration: config)
+    }()
+
+    // In-memory search cache keyed by normalised query string
+    private var searchCache = NSCache<NSString, NSArray>()
+    private let decoder = JSONDecoder()
+    private let offFields = "product_name,brands,image_front_small_url,nutriscore_grade,nova_group,additives_tags"
+
+    // MARK: - Search
 
     func searchProducts(query: String) -> AnyPublisher<[Product], Error> {
-        guard !query.trimmingCharacters(in: .whitespaces).isEmpty else {
+        let key = query.lowercased().trimmingCharacters(in: .whitespaces)
+        guard !key.isEmpty else {
             return Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
         }
-        let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
-        let urlString = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=\(encoded)&search_simple=1&action=process&json=1&page_size=12&fields=product_name,brands,image_front_small_url,nutriscore_grade,nova_group,additives_tags"
-        guard let url = URL(string: urlString) else {
+        if let cached = searchCache.object(forKey: key as NSString) as? [Product] {
+            return Just(cached).setFailureType(to: Error.self).eraseToAnyPublisher()
+        }
+        guard let url = searchURL(for: key) else {
             return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
         }
-        return URLSession.shared.dataTaskPublisher(for: url)
+        return session.dataTaskPublisher(for: url)
             .map(\.data)
-            .decode(type: OpenFoodFactsResponse.self, decoder: JSONDecoder())
-            .map { response in
-                (response.products ?? []).compactMap { $0.toProduct() }
+            .decode(type: OpenFoodFactsResponse.self, decoder: decoder)
+            .map { [weak self] response -> [Product] in
+                let products = (response.products ?? []).compactMap { $0.toProduct() }
+                self?.searchCache.setObject(products as NSArray, forKey: key as NSString)
+                return products
             }
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
 
+    // MARK: - Barcode
+
     func fetchProduct(barcode: String) -> AnyPublisher<Product?, Error> {
-        let urlString = "https://world.openfoodfacts.org/api/v0/product/\(barcode).json"
-        guard let url = URL(string: urlString) else {
+        guard let url = URL(string: "https://world.openfoodfacts.org/api/v0/product/\(barcode).json") else {
             return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
         }
-        return URLSession.shared.dataTaskPublisher(for: url)
+        return session.dataTaskPublisher(for: url)
             .map(\.data)
-            .decode(type: OpenFoodFactsResponse.self, decoder: JSONDecoder())
+            .decode(type: OpenFoodFactsResponse.self, decoder: decoder)
             .map { response -> Product? in
                 guard response.status == 1 else { return nil }
                 return response.product?.toProduct()
@@ -41,53 +65,61 @@ class OpenFoodFactsService: ObservableObject {
             .eraseToAnyPublisher()
     }
 
-    func discoverProducts(category: String) -> AnyPublisher<[Product], Error> {
-        let encoded = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? category
-        let urlString = "https://world.openfoodfacts.org/cgi/search.pl?tagtype_0=categories&tag_contains_0=contains&tag_0=\(encoded)&sort_by=unique_scans_n&action=process&json=1&page_size=30&fields=product_name,brands,image_front_small_url,nutriscore_grade,nova_group,additives_tags"
-        guard let url = URL(string: urlString) else {
-            return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
-        }
-        return URLSession.shared.dataTaskPublisher(for: url)
-            .map(\.data)
-            .decode(type: OpenFoodFactsResponse.self, decoder: JSONDecoder())
-            .map { response in
-                (response.products ?? []).compactMap { $0.toProduct() }
-            }
-            .receive(on: DispatchQueue.main)
-            .eraseToAnyPublisher()
-    }
-
-    /// async/await barcode lookup used by the scanner
     func fetchProductAsync(barcode: String) async -> Product? {
-        let urlString = "https://world.openfoodfacts.org/api/v0/product/\(barcode).json"
-        guard let url = URL(string: urlString) else { return nil }
+        guard let url = URL(string: "https://world.openfoodfacts.org/api/v0/product/\(barcode).json") else { return nil }
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let response = try JSONDecoder().decode(OpenFoodFactsResponse.self, from: data)
+            let (data, _) = try await session.data(from: url)
+            let response = try decoder.decode(OpenFoodFactsResponse.self, from: data)
             guard response.status == 1 else { return nil }
             return response.product?.toProduct()
-        } catch {
-            return nil
-        }
+        } catch { return nil }
     }
 
-    /// async/await variant used by the streaming Discover tab
-    func discoverProductsAsync(category: String, pageSize: Int = 30) async -> [Product] {
-        let encoded = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? category
-        let urlString = "https://world.openfoodfacts.org/cgi/search.pl?tagtype_0=categories&tag_contains_0=contains&tag_0=\(encoded)&sort_by=unique_scans_n&action=process&json=1&page_size=\(pageSize)&fields=product_name,brands,image_front_small_url,nutriscore_grade,nova_group,additives_tags"
-        guard let url = URL(string: urlString) else { return [] }
+    // MARK: - Discover (async, used by DiscoverViewModel task group)
+
+    func discoverProductsAsync(category: String, pageSize: Int = 20) async -> [Product] {
+        guard let url = discoverURL(for: category, pageSize: pageSize) else { return [] }
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let response = try JSONDecoder().decode(OpenFoodFactsResponse.self, from: data)
-            let products = (response.products ?? []).compactMap { $0.toProduct() }
-            return products.sorted {
-                let ga = $0.nutriscoreGrade ?? "z"
-                let gb = $1.nutriscoreGrade ?? "z"
-                if ga != gb { return ga < gb }
-                return ($0.gistScore ?? 0) > ($1.gistScore ?? 0)
-            }
-        } catch {
-            return []
-        }
+            let (data, _) = try await session.data(from: url)
+            let response = try decoder.decode(OpenFoodFactsResponse.self, from: data)
+            return (response.products ?? [])
+                .compactMap { $0.toProduct() }
+                .sorted {
+                    let ga = $0.nutriscoreGrade ?? "z"
+                    let gb = $1.nutriscoreGrade ?? "z"
+                    if ga != gb { return ga < gb }
+                    return ($0.gistScore ?? 0) > ($1.gistScore ?? 0)
+                }
+        } catch { return [] }
+    }
+
+    // MARK: - URL builders
+
+    private func searchURL(for query: String) -> URL? {
+        var c = URLComponents(string: "https://world.openfoodfacts.org/cgi/search.pl")!
+        c.queryItems = [
+            .init(name: "search_terms",  value: query),
+            .init(name: "search_simple", value: "1"),
+            .init(name: "action",        value: "process"),
+            .init(name: "json",          value: "1"),
+            .init(name: "page_size",     value: "8"),
+            .init(name: "fields",        value: offFields),
+        ]
+        return c.url
+    }
+
+    private func discoverURL(for category: String, pageSize: Int) -> URL? {
+        var c = URLComponents(string: "https://world.openfoodfacts.org/cgi/search.pl")!
+        c.queryItems = [
+            .init(name: "tagtype_0",      value: "categories"),
+            .init(name: "tag_contains_0", value: "contains"),
+            .init(name: "tag_0",          value: category),
+            .init(name: "sort_by",        value: "unique_scans_n"),
+            .init(name: "action",         value: "process"),
+            .init(name: "json",           value: "1"),
+            .init(name: "page_size",      value: "\(pageSize)"),
+            .init(name: "fields",         value: offFields),
+        ]
+        return c.url
     }
 }
