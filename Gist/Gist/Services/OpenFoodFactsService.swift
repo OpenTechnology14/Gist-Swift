@@ -57,6 +57,20 @@ class OpenFoodFactsService: ObservableObject {
             .eraseToAnyPublisher()
     }
 
+    /// async/await barcode lookup used by the scanner
+    func fetchProductAsync(barcode: String) async -> Product? {
+        let urlString = "https://world.openfoodfacts.org/api/v0/product/\(barcode).json"
+        guard let url = URL(string: urlString) else { return nil }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(OpenFoodFactsResponse.self, from: data)
+            guard response.status == 1 else { return nil }
+            return response.product?.toProduct()
+        } catch {
+            return nil
+        }
+    }
+
     /// async/await variant used by the streaming Discover tab
     func discoverProductsAsync(category: String, pageSize: Int = 30) async -> [Product] {
         let encoded = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? category

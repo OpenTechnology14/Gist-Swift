@@ -8,29 +8,49 @@ struct ListsView: View {
     @StateObject private var viewModel = ListsViewModel()
     @State private var showAddList = false
     @State private var moveItem: GroceryItem?
+    @State private var showScanner = false
+    @State private var scannedBarcode: String? = nil
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Header
+                // iOS-style nav bar
                 HStack {
-                    Text("Gist")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(Color(hex: "#2a2118"))
+                    HStack(spacing: 8) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 28 * 0.3125, style: .continuous)
+                                .fill(LinearGradient(
+                                    colors: [Color(hex: "#34c759"), Color(hex: "#30d158")],
+                                    startPoint: .topLeading, endPoint: .bottomTrailing))
+                                .frame(width: 28, height: 28)
+                            Text("🥦").font(.system(size: 14))
+                        }
+                        Text("Gist")
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundColor(.primary)
+                    }
                     Spacer()
-                    EditButton()
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(Color(hex: "#7ac94b"))
+                    HStack(spacing: 8) {
+                        EditButton()
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(Color(hex: "#34c759"))
+                        Button { showScanner = true } label: {
+                            Image(systemName: "barcode.viewfinder")
+                                .font(.system(size: 18))
+                                .foregroundColor(Color(hex: "#34c759"))
+                        }
+                    }
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 8)
-                .padding(.bottom, 4)
+                .frame(height: 52)
+                .background(.ultraThinMaterial)
+                .overlay(alignment: .bottom) { Divider() }
 
-                // Search bar — below header, not covering window
+                // Search bar — below header
                 SearchBar(
                     text: $viewModel.searchQuery,
                     placeholder: "Search products...",
-                    onScanTap: nil,
+                    onScanTap: { showScanner = true },
                     suggestion: "Taco Tuesday",
                     onSuggestionTap: { viewModel.searchQuery = "Taco Tuesday" }
                 )
@@ -182,6 +202,18 @@ struct ListsView: View {
                 .listStyle(.insetGrouped)
             }
             .navigationBarHidden(true)
+        }
+        .sheet(isPresented: $showScanner) {
+            BarcodeScannerView(scannedCode: $scannedBarcode, isPresented: $showScanner)
+        }
+        .onChange(of: scannedBarcode) { barcode in
+            guard let barcode else { return }
+            Task {
+                if let product = await OpenFoodFactsService.shared.fetchProductAsync(barcode: barcode) {
+                    storageService.addToRecentlyViewed(from: product)
+                }
+                scannedBarcode = nil
+            }
         }
         .sheet(isPresented: $showAddList) {
             AddListSheet(isPresented: $showAddList) { name, emoji in

@@ -4,12 +4,29 @@ A native SwiftUI iPhone app that helps you make healthier grocery choices. Searc
 
 ## Features
 
-- **Grocery List** — Search products, scan barcodes, organize by category, check off items
-- **Order List** — Separate order list with the same search and scan capabilities
-- **Discover** — Browse top-rated products by category (Fruits, Vegetables, Dairy, Snacks, and more)
-- **Gist Score** — A 0–100 health indicator combining Nutri-Score with additive risk analysis
-- **Barcode Scanner** — Point your camera at any product barcode for instant nutrition info
-- **Offline-first** — All list data stored locally on device via UserDefaults
+### Lists Tab
+- **Recently Viewed** — Products you search or scan automatically appear here; swipe left to remove, swipe right to move to a list
+- **Custom Lists** — Create named lists with emoji icons; tap to expand and check off items; reorder and delete with edit mode
+- **Move to List** — Add any Recently Viewed item to a custom list with one tap
+- **Barcode Scanner** — Tap the barcode icon in the header to scan any product; result is added to Recently Viewed automatically
+- **Product Search** — Inline search with live results showing Nutri-Score, brand, and product image
+
+### Discover Tab
+- **Grocery / Order toggle** — Switch between grocery categories (Fruits, Vegetables, Dairy, Meat, etc.) and order categories (Snacks, Baking, Sauces, Canned, Seasonings, etc.)
+- **Filter chips** — Tap one or more categories to narrow results; no selection = one item from every category
+- **Streaming load** — Products load one by one as each category resolves; skeleton placeholders shown while fetching
+- **Expand to add** — Tap any product card to expand it; the product is automatically added to Recently Viewed on first expand
+- **Health badges** — Every card shows Nutri-Score, NOVA group, and additive warning count
+
+### Health Scoring
+- **Gist Score** — A 0–100 composite health indicator combining Nutri-Score grade with additive risk analysis
+- **Nutri-Score** — A–E letter grade for overall nutritional quality
+- **NOVA Group** — 1–4 food processing classification
+- **Additive Risk** — Count and severity of potentially harmful additives (E-numbers)
+
+### Storage
+- All list and recently viewed data stored locally via **UserDefaults**
+- Keys: `groceryLists`, `recentlyViewed`
 
 ## Tech Stack
 

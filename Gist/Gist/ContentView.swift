@@ -18,15 +18,11 @@ struct ContentView: View {
                 }
                 .tag(1)
         }
-        .tint(Color(hex: "#7ac94b"))
+        .tint(Color(hex: "#34c759"))
         .onAppear {
+            // Use system translucent tab bar — matches iOS design language
             let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor(Color(hex: "#2a2118"))
-            appearance.stackedLayoutAppearance.selected.iconColor = UIColor(Color(hex: "#7ac94b"))
-            appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(Color(hex: "#7ac94b"))]
-            appearance.stackedLayoutAppearance.normal.iconColor = UIColor.lightGray
-            appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.lightGray]
+            appearance.configureWithDefaultBackground()
             UITabBar.appearance().standardAppearance = appearance
             UITabBar.appearance().scrollEdgeAppearance = appearance
         }
