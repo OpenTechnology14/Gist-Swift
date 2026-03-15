@@ -3,6 +3,8 @@ import SwiftUI
 struct GistScoreView: View {
     let score: Int?
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private var displayScore: Int { score ?? 0 }
     private var color: Color {
         guard let s = score else { return Color(hex: "#888888") }
@@ -11,6 +13,10 @@ struct GistScoreView: View {
     private var label: String {
         guard score != nil else { return "N/A" }
         return "\(displayScore)"
+    }
+    private var accessibilityDescription: String {
+        guard let s = score else { return "Gist Score not available" }
+        return "Gist Score \(s), \(scoreLabel(s))"
     }
 
     var body: some View {
@@ -22,7 +28,7 @@ struct GistScoreView: View {
                 .trim(from: 0, to: score != nil ? CGFloat(displayScore) / 100.0 : 0)
                 .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .animation(.easeInOut(duration: 0.6), value: score)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: score)
 
             VStack(spacing: 0) {
                 Text(label)
@@ -36,6 +42,18 @@ struct GistScoreView: View {
             }
         }
         .frame(width: 44, height: 44)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private func scoreLabel(_ s: Int) -> String {
+        switch s {
+        case 75...100: return "excellent health profile"
+        case 50..<75:  return "good health profile"
+        case 30..<50:  return "moderate health profile"
+        case 15..<30:  return "poor health profile"
+        default:       return "very poor health profile"
+        }
     }
 }
 
@@ -76,6 +94,7 @@ struct GistScoreDetailView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(additive.riskLevel >= 3 ? Color(hex: "#e63c2f") : Color(hex: "#f5841f"))
                             .font(.system(size: 12))
+                            .accessibilityHidden(true)
                         Text(additive.name)
                             .font(.system(size: 13, weight: .medium))
                         Spacer()
@@ -83,6 +102,8 @@ struct GistScoreDetailView: View {
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(additive.name), \(riskLabel(additive.riskLevel))")
                 }
             }
         }
@@ -94,17 +115,17 @@ struct GistScoreDetailView: View {
     private func scoreLabel(_ s: Int) -> String {
         switch s {
         case 75...100: return "Excellent health profile"
-        case 50..<75: return "Good health profile"
-        case 30..<50: return "Moderate health profile"
-        case 15..<30: return "Poor health profile"
-        default: return "Very poor health profile"
+        case 50..<75:  return "Good health profile"
+        case 30..<50:  return "Moderate health profile"
+        case 15..<30:  return "Poor health profile"
+        default:       return "Very poor health profile"
         }
     }
 
     private func riskLabel(_ level: Int) -> String {
         switch level {
         case 0: return "Low risk"
-        case 1: return "Moderate"
+        case 1: return "Moderate risk"
         case 2: return "High risk"
         case 3: return "Very high risk"
         default: return ""

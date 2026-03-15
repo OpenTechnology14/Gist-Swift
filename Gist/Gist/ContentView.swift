@@ -6,23 +6,17 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            GroceryListView()
+            ListsView()
                 .tabItem {
-                    Label("Grocery", systemImage: "cart.fill")
+                    Label("Lists", systemImage: "list.bullet")
                 }
                 .tag(0)
-
-            OrderListView()
-                .tabItem {
-                    Label("Order", systemImage: "bag.fill")
-                }
-                .tag(1)
 
             DiscoverView()
                 .tabItem {
                     Label("Discover", systemImage: "sparkles")
                 }
-                .tag(2)
+                .tag(1)
         }
         .tint(Color(hex: "#7ac94b"))
         .onAppear {

@@ -3,22 +3,26 @@ import SwiftUI
 struct NutriScoreBadge: View {
     let grade: String?
 
-    var body: some View {
-        if let g = grade?.uppercased(), !g.isEmpty {
-            Text(g)
-                .font(.system(size: 11, weight: .bold))
-                .foregroundColor(.white)
-                .frame(width: 22, height: 22)
-                .background(Color(hex: ScoringService.shared.nutriscoreColor(for: grade)))
-                .cornerRadius(4)
-        } else {
-            Text("?")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundColor(.white)
-                .frame(width: 22, height: 22)
-                .background(Color(hex: "#888888"))
-                .cornerRadius(4)
+    private var fullLabel: String {
+        switch grade?.lowercased() {
+        case "a": return "Nutri-Score A, Excellent"
+        case "b": return "Nutri-Score B, Good"
+        case "c": return "Nutri-Score C, Fair"
+        case "d": return "Nutri-Score D, Poor"
+        case "e": return "Nutri-Score E, Bad"
+        default:  return "Nutri-Score unknown"
         }
+    }
+
+    var body: some View {
+        let displayText = grade.map { $0.uppercased() } ?? "?"
+        Text(displayText)
+            .font(.system(size: 11, weight: .bold))
+            .foregroundColor(.white)
+            .frame(width: 22, height: 22)
+            .background(Color(hex: ScoringService.shared.nutriscoreColor(for: grade)))
+            .cornerRadius(4)
+            .accessibilityLabel(fullLabel)
     }
 }
 
@@ -35,22 +39,25 @@ struct NovaBadge: View {
         }
     }
 
-    var body: some View {
-        if let g = group {
-            Text("N\(g)")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundColor(.white)
-                .frame(width: 24, height: 22)
-                .background(color)
-                .cornerRadius(4)
-        } else {
-            Text("N?")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundColor(.white)
-                .frame(width: 24, height: 22)
-                .background(Color(hex: "#888888"))
-                .cornerRadius(4)
+    private var fullLabel: String {
+        switch group {
+        case 1: return "NOVA Group 1, Unprocessed food"
+        case 2: return "NOVA Group 2, Processed culinary ingredient"
+        case 3: return "NOVA Group 3, Processed food"
+        case 4: return "NOVA Group 4, Ultra-processed food"
+        default: return "NOVA Group unknown"
         }
+    }
+
+    var body: some View {
+        let displayText = group.map { "N\($0)" } ?? "N?"
+        Text(displayText)
+            .font(.system(size: 11, weight: .bold))
+            .foregroundColor(.white)
+            .frame(width: 24, height: 22)
+            .background(color)
+            .cornerRadius(4)
+            .accessibilityLabel(fullLabel)
     }
 }
 
@@ -62,6 +69,7 @@ struct AdditiveWarningBadge: View {
             HStack(spacing: 2) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 9))
+                    .accessibilityHidden(true)
                 Text("\(count)")
                     .font(.system(size: 11, weight: .bold))
             }
@@ -70,6 +78,7 @@ struct AdditiveWarningBadge: View {
             .frame(height: 22)
             .background(Color(hex: "#e63c2f"))
             .cornerRadius(4)
+            .accessibilityLabel("\(count) high-risk additive\(count == 1 ? "" : "s") detected")
         }
     }
 }

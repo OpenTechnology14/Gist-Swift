@@ -24,6 +24,8 @@
 		A1000015 /* HealthBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000015 /* HealthBadgeView.swift */; };
 		A1000016 /* GistScoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000016 /* GistScoreView.swift */; };
 		A1000017 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B1000017 /* Assets.xcassets */; };
+		A1000019 /* GroceryList.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000019 /* GroceryList.swift */; };
+		A1000020 /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000020 /* ListsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +48,8 @@
 		B1000016 /* GistScoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GistScoreView.swift; sourceTree = "<group>"; };
 		B1000017 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B1000018 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B1000019 /* GroceryList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroceryList.swift; sourceTree = "<group>"; };
+		B1000020 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +91,7 @@
 				B1000003 /* Product.swift */,
 				B1000004 /* GroceryItem.swift */,
 				B1000005 /* Category.swift */,
+				B1000019 /* GroceryList.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -112,6 +117,7 @@
 				B1000014 /* ProductRow.swift */,
 				B1000015 /* HealthBadgeView.swift */,
 				B1000016 /* GistScoreView.swift */,
+				B1000020 /* ListsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -209,6 +215,8 @@
 				A1000014 /* ProductRow.swift in Sources */,
 				A1000015 /* HealthBadgeView.swift in Sources */,
 				A1000016 /* GistScoreView.swift in Sources */,
+				A1000019 /* GroceryList.swift in Sources */,
+				A1000020 /* ListsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

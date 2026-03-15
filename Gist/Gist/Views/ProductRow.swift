@@ -4,9 +4,20 @@ struct ProductRow: View {
     let product: Product
     var onAdd: (() -> Void)?
 
+    private var rowAccessibilityLabel: String {
+        var parts: [String] = [product.name]
+        if let brand = product.brand, !brand.isEmpty { parts.append(brand) }
+        if let grade = product.nutriscoreGrade {
+            parts.append("Nutri-Score \(grade.uppercased())")
+        }
+        if let score = product.gistScore {
+            parts.append("Gist Score \(score)")
+        }
+        return parts.joined(separator: ", ")
+    }
+
     var body: some View {
         HStack(spacing: 12) {
-            // Product image
             AsyncImage(url: URL(string: product.imageURL ?? "")) { phase in
                 switch phase {
                 case .success(let image):
@@ -15,14 +26,17 @@ struct ProductRow: View {
                 case .failure:
                     Image(systemName: "photo")
                         .foregroundColor(.secondary)
+                        .accessibilityHidden(true)
                 default:
                     ProgressView()
+                        .accessibilityLabel("Loading product image")
                 }
             }
             .frame(width: 52, height: 52)
             .background(Color(.systemGray6))
             .cornerRadius(8)
             .clipped()
+            .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(product.name)
@@ -40,6 +54,7 @@ struct ProductRow: View {
                     let highRisk = ScoringService.shared.highRiskAdditives(from: product.additives)
                     AdditiveWarningBadge(count: highRisk.count)
                 }
+                .accessibilityElement(children: .combine)
             }
 
             Spacer()
@@ -52,7 +67,9 @@ struct ProductRow: View {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 24))
                             .foregroundColor(Color(hex: "#7ac94b"))
+                            .frame(width: 44, height: 44)
                     }
+                    .accessibilityLabel("Add \(product.name) to list")
                 }
             }
         }
@@ -61,6 +78,9 @@ struct ProductRow: View {
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(rowAccessibilityLabel)
+        .accessibilityHint(onAdd != nil ? "Double tap to add to list" : "")
     }
 }
 
@@ -77,7 +97,9 @@ struct GroceryItemRow: View {
                 Image(systemName: item.isChecked ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
                     .foregroundColor(item.isChecked ? Color(hex: "#7ac94b") : Color(.systemGray3))
+                    .frame(width: 44, height: 44)
             }
+            .accessibilityLabel(item.isChecked ? "Mark \(item.name) as not done" : "Mark \(item.name) as done")
 
             AsyncImage(url: URL(string: item.imageURL ?? "")) { phase in
                 switch phase {
@@ -95,6 +117,7 @@ struct GroceryItemRow: View {
             .background(Color(.systemGray6))
             .cornerRadius(6)
             .clipped()
+            .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.name)
@@ -114,33 +137,44 @@ struct GroceryItemRow: View {
                     let highRisk = ScoringService.shared.highRiskAdditives(from: item.additives)
                     AdditiveWarningBadge(count: highRisk.count)
                 }
+                .accessibilityElement(children: .combine)
             }
+            .accessibilityHidden(true)
 
             Spacer()
 
             VStack(spacing: 4) {
                 GistScoreView(score: item.gistScore)
+                    .accessibilityHidden(true)
 
                 HStack(spacing: 4) {
                     Button(action: { onDecrement?() }) {
                         Image(systemName: "minus.circle")
-                            .font(.system(size: 16))
+                            .font(.system(size: 20))
                             .foregroundColor(.secondary)
+                            .frame(width: 44, height: 44)
                     }
+                    .accessibilityLabel("Decrease quantity of \(item.name)")
+
                     Text("\(item.quantity)")
                         .font(.system(size: 13, weight: .semibold))
                         .frame(minWidth: 20)
+                        .accessibilityLabel("Quantity \(item.quantity)")
+
                     Button(action: { onIncrement?() }) {
                         Image(systemName: "plus.circle")
-                            .font(.system(size: 16))
+                            .font(.system(size: 20))
                             .foregroundColor(Color(hex: "#7ac94b"))
+                            .frame(width: 44, height: 44)
                     }
+                    .accessibilityLabel("Increase quantity of \(item.name)")
                 }
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
         .padding(.horizontal, 12)
         .background(Color(.systemBackground))
         .cornerRadius(10)
+        .accessibilityElement(children: .contain)
     }
 }

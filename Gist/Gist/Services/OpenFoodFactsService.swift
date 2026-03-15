@@ -56,4 +56,24 @@ class OpenFoodFactsService: ObservableObject {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
+
+    /// async/await variant used by the streaming Discover tab
+    func discoverProductsAsync(category: String, pageSize: Int = 30) async -> [Product] {
+        let encoded = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? category
+        let urlString = "https://world.openfoodfacts.org/cgi/search.pl?tagtype_0=categories&tag_contains_0=contains&tag_0=\(encoded)&sort_by=unique_scans_n&action=process&json=1&page_size=\(pageSize)&fields=product_name,brands,image_front_small_url,nutriscore_grade,nova_group,additives_tags"
+        guard let url = URL(string: urlString) else { return [] }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(OpenFoodFactsResponse.self, from: data)
+            let products = (response.products ?? []).compactMap { $0.toProduct() }
+            return products.sorted {
+                let ga = $0.nutriscoreGrade ?? "z"
+                let gb = $1.nutriscoreGrade ?? "z"
+                if ga != gb { return ga < gb }
+                return ($0.gistScore ?? 0) > ($1.gistScore ?? 0)
+            }
+        } catch {
+            return []
+        }
+    }
 }
