@@ -113,3 +113,40 @@ create trigger on_auth_user_created
 -- To promote a user to admin, run:
 --   update public.profiles set role = 'admin' where email = 'your@email.com';
 -- ============================================================
+
+-- ============================================================
+-- 4. Products table (imported from Open Food Facts)
+--    Populated by scripts/import-products.js — not user data.
+--    Publicly readable; no auth required for product search.
+-- ============================================================
+
+create table if not exists public.products (
+  id                text primary key,          -- OFF barcode / product code
+  name              text not null,
+  brand             text,
+  nutriscore_grade  text,                       -- a | b | c | d | e
+  nova_group        int,
+  gist_score        int,
+  image_url         text,
+  additives         text[] not null default '{}',
+  updated_at        timestamptz default now(),
+  search_vec        tsvector generated always as (
+    to_tsvector('english', name || ' ' || coalesce(brand, ''))
+  ) stored
+);
+
+create index if not exists products_search_vec_idx on public.products using gin(search_vec);
+create index if not exists products_name_idx       on public.products(name);
+create index if not exists products_gist_score_idx on public.products(gist_score desc);
+
+alter table public.products enable row level security;
+
+-- Anyone (including unauthenticated / anon key) can read products
+create policy "products_public_read"
+  on public.products for select
+  using (true);
+
+-- Only the Supabase service role (import script) can write
+create policy "products_service_write"
+  on public.products for all
+  using (auth.role() = 'service_role');
