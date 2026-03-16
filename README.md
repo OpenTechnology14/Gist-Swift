@@ -84,6 +84,18 @@ update public.profiles set role = 'admin' where email = 'your@email.com';
 
 Your Account tab will then show an **Open Admin Panel** button where you can adjust per-user list and item limits.
 
+### Step 5 — Migrate an existing database (upgrading from an older version)
+
+If you already have a Supabase project running the old schema (which stored an `emoji` column on lists), run these three statements in the SQL Editor to migrate to the new `color` column:
+
+```sql
+alter table public.lists rename column emoji to color;
+alter table public.lists alter column color set default '#7ac94b';
+update public.lists set color = '#7ac94b' where color not like '#%';
+```
+
+Fresh installs can skip this step — `supabase_schema.sql` already uses `color`.
+
 ---
 
 ## Opening the Project
