@@ -5,11 +5,15 @@ A native SwiftUI iPhone app that helps you make healthier grocery choices. Searc
 ## Features
 
 ### Lists Tab
-- **Recently Viewed** — Products you search or scan automatically appear here; swipe left to remove, swipe right to move to a list
-- **Custom Lists** — Create named lists with emoji icons; tap to expand and check off items; reorder and delete with edit mode
+- **Recently Viewed** — Products you search or scan appear here after a review step; swipe left to remove, swipe right to move to a list
+- **Custom Lists** — Create named lists with a colour swatch (15 colours to choose from); tap to expand and check off items; reorder and delete with edit mode
+- **Custom Item** — Add any item manually (name + brand) without an API lookup via the "Custom Item" button
+- **Bulk Add (CSV)** — Upload or paste a CSV of up to 50 items (`Product Name, Brand`) for rapid list population; formula-injection strings are sanitised automatically
 - **Move to List** — Add any Recently Viewed item to a custom list with one tap
-- **Barcode Scanner** — Tap the barcode icon in the header to scan any product; result is added to Recently Viewed automatically
-- **Product Search** — Inline search with live results showing Nutri-Score, brand, and product image
+- **Barcode Scanner** — Tap the 📷 button inline with the search bar to scan any product; result opens a review sheet before being saved
+- **Product Search** — Inline search with live results showing Nutri-Score, brand, and product image; tap a result to review before adding
+- **Review Step** — Tapping any search result opens a detail sheet so you can inspect health scores before confirming the add
+- **English-only results** — Non-English product names (CJK, Arabic, Cyrillic, etc.) are filtered out of search results automatically
 
 ### Discover Tab
 - **Grocery / Order toggle** — Switch between grocery categories (Fruits, Vegetables, Dairy, Meat, etc.) and order categories (Snacks, Baking, Sauces, Canned, Seasonings, etc.)
@@ -31,7 +35,7 @@ A native SwiftUI iPhone app that helps you make healthier grocery choices. Searc
 - **Admin Panel** — admin users can view all accounts and adjust per-user limits
 
 ### Storage
-- **Local:** UserDefaults (`groceryLists`, `recentlyViewed`)
+- **Local:** UserDefaults (`groceryLists`, `recentlyViewed`, `productCache` — 24-hour TTL)
 - **Cloud:** Supabase — `profiles`, `lists`, `items` tables
 
 ## Tech Stack

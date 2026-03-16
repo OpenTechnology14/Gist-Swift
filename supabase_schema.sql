@@ -18,10 +18,15 @@ create table if not exists public.lists (
   id          uuid default gen_random_uuid() primary key,
   user_id     uuid references auth.users on delete cascade not null,
   name        text not null,
-  emoji       text not null default '🛒',
+  color       text not null default '#7ac94b',  -- hex colour swatch chosen by user
   sort_order  int  not null default 0,
   created_at  timestamptz default now()
 );
+
+-- Migration: if upgrading from an older schema that used emoji, run:
+--   alter table public.lists rename column emoji to color;
+--   alter table public.lists alter column color set default '#7ac94b';
+--   update public.lists set color = '#7ac94b' where color like '%🛒%' or color like '%📝%';
 
 -- 3. Items table
 create table if not exists public.items (
