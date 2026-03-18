@@ -98,6 +98,58 @@ Fresh installs can skip this step — `supabase_schema.sql` already uses `color`
 
 ---
 
+## Turso Setup (Alternative to Supabase)
+
+[Turso](https://turso.tech) is a SQLite-compatible edge database. Because Turso has no built-in auth, sign-up and sign-in run through two Vercel serverless functions included in the web repo (`Gist`). The Swift app hits those same endpoints — no Turso credentials ever touch the device.
+
+> **Prerequisite:** Deploy the Gist web repo to Vercel first and complete its Turso setup steps (Steps 1–5 in that README). You only need one Turso database and one set of Vercel functions for both apps.
+
+### Step 1 — Set the API base URL
+
+Open `Gist/Gist/Services/TursoConfig.swift` and replace the placeholder:
+
+```swift
+static let apiBase = "https://YOUR_VERCEL_URL"
+// e.g. "https://gist-abc123.vercel.app"
+```
+
+### Step 2 — Swap the service implementations
+
+Replace `AuthService` and `CloudStorageService` with their Turso counterparts.
+
+In every file that imports or references `AuthService.shared`, change it to `TursoAuthService.shared`.
+In every file that references `CloudStorageService.shared`, change it to `TursoCloudService.shared`.
+
+The public API of both replacements is identical to the originals — no other code changes are required.
+
+Alternatively, open `GistApp.swift` (or whichever file injects the auth object) and update the state object:
+
+```swift
+// Before
+@StateObject private var auth = AuthService.shared
+
+// After
+@StateObject private var auth = TursoAuthService.shared
+```
+
+### Step 3 — Build and run
+
+Select a simulator or device and press **Cmd + R**. The sign-in screen will appear. Sign up, and your lists sync to Turso via the Vercel API.
+
+### Step 4 — Promote yourself to admin
+
+After signing up in the app, run from your Mac terminal:
+
+```bash
+# Requires the Gist web repo to be cloned alongside this one
+TURSO_URL=libsql://gist-<org>.turso.io \
+TURSO_TOKEN=your-auth-token \
+ADMIN_EMAIL=you@email.com \
+node ../Gist/scripts/setup-turso.js --promote
+```
+
+---
+
 ## Opening the Project
 
 ### In Xcode
