@@ -252,6 +252,9 @@ The app uses the camera for barcode scanning and collects email/password for aut
 
 - **Custom New Items + Review Process** — Enhanced custom item creation with a full review flow matching the search/scan experience, including health score lookup and confirmation before adding to a list
 - **Other Languages** — Support for non-English product databases and localised UI (French, Spanish, German, and more) using Open Food Facts' multilingual data
+- **Healthier Alternatives** — When viewing a product, suggest similar items with a higher Gist Score in the same category
+- **Meal Planning** — Build weekly meal plans from saved lists and get an at-a-glance nutritional summary for the week
+- **Widgets & Apple Watch** — Home screen widgets showing your active list and an Apple Watch companion app for quick check-offs while shopping
 
 ---
 
