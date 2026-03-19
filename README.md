@@ -248,6 +248,13 @@ The app uses the camera for barcode scanning and collects email/password for aut
 
 ---
 
+## Future Features
+
+- **Custom New Items + Review Process** — Enhanced custom item creation with a full review flow matching the search/scan experience, including health score lookup and confirmation before adding to a list
+- **Other Languages** — Support for non-English product databases and localised UI (French, Spanish, German, and more) using Open Food Facts' multilingual data
+
+---
+
 ## Data Sources
 
 Product data is provided by [Open Food Facts](https://world.openfoodfacts.org) under the [Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/).
